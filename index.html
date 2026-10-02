@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FiberInspect Macro Mobile - Multi-Lens Edition</title>
+    <title>FiberInspect Macro Mobile - Advanced Zoom Edition</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -28,7 +28,7 @@
             <div>
                 <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
                     FiberInspect Macro
-                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">Multi-Lente v3</span>
+                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">Zoom Macro v4</span>
                 </h1>
                 <p class="text-[10px] text-slate-400">Fitas 250µm (&lt;4mm) no Redmi Note</p>
             </div>
@@ -61,25 +61,27 @@
                         <i class="fa-solid fa-camera-retro"></i>
                     </div>
                     <p class="text-xs font-semibold text-slate-300">Câmera Desativada</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5 mb-3">Selecione a lente e inicie a inspeção.</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 mb-3">Inicie para inspecionar com foco macro.</p>
                     <button onclick="app.toggleCamera()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-cyan-950/30 flex items-center gap-2">
                         <i class="fa-solid fa-power-off"></i> Iniciar Câmera
                     </button>
                 </div>
             </div>
 
-            <!-- Seletor Exaustivo de Lentes (Redmi Note Fix) -->
-            <div class="mt-3 space-y-1">
-                <div class="flex justify-between items-center">
-                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Seleção de Lentes Traseiras / Frontais</label>
-                    <button onclick="app.loadAvailableCameras()" class="text-[10px] text-cyan-400 hover:underline flex items-center gap-1">
-                        <i class="fa-solid fa-rotate"></i> Recarregar Lentes
-                    </button>
+            <!-- Controle de Zoom Avançado para Forçar Lente / Aproximação -->
+            <div class="mt-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="font-semibold text-slate-300 flex items-center gap-1">
+                        <i class="fa-solid fa-magnifying-glass-plus text-cyan-400"></i> Zoom / Aproximação Macro
+                    </span>
+                    <span id="val-zoom" class="font-mono text-cyan-400">1.0x</span>
                 </div>
-                <select id="camera-selector" onchange="app.changeCameraSource(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-medium">
-                    <option value="">A detetar lentes do dispositivo...</option>
-                </select>
-                <p class="text-[9px] text-slate-500 mt-1">Dica: Se a etiqueta vier vazia, teste a <strong>Opção 1, 2 ou 3</strong> para encontrar a lente macro física do seu Redmi.</p>
+                <input type="range" id="slider-zoom" min="1" max="5" step="0.1" value="1" oninput="app.updateZoom(this.value)" class="w-full accent-cyan-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer" disabled>
+                <div class="flex justify-between text-[9px] text-slate-500">
+                    <span>1x (Padrão)</span>
+                    <span>3x (Recomendado Fita)</span>
+                    <span>5x (Máx)</span>
+                </div>
             </div>
 
             <!-- Botões Rápidos de Ação da Câmera -->
@@ -173,12 +175,11 @@
                 <i class="fa-solid fa-xmark text-base"></i>
             </button>
             <h3 class="text-sm font-bold text-white mb-2.5 flex items-center gap-1.5">
-                <i class="fa-solid fa-mobile-screen text-cyan-400"></i> Como Ativar a Lente Macro no Redmi Note
+                <i class="fa-solid fa-mobile-screen text-cyan-400"></i> Dica para Inspeção Macro no Redmi Note
             </h3>
             <div class="space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                <p><strong>1. Permissão Inicial:</strong> O Android esconde os nomes das lentes auxiliares até que a permissão de vídeo seja concedida uma vez.</p>
-                <p><strong>2. Teste Sequencial:</strong> No campo de seleção de lentes, o aplicativo enumera todas as opções detetadas. Como a Xiaomi costuma ocultar o rótulo ("", "camera2 0", "camera2 1"), experimente alternar entre a <strong>Opção 1, Opção 2 e Opção 3</strong> e ligar a câmara para identificar qual delas ativa o foco macro de proximidade.</p>
-                <p><strong>3. Distância da Fita:</strong> Aproxime a fita óptica a 2-3 cm da lente traseira selecionada.</p>
+                <p><strong>1. Ocultação de Lentes pelo Android:</strong> O navegador Chrome no Android agrupa as lentes traseiras e muitas vezes oculta a lente macro física dedicada. Por isso, utilizamos a câmera traseira principal em conjunto com o <strong>Controle de Zoom</strong>.</p>
+                <p><strong>2. Distância ideal:</strong> Posicione a fita de fibras a cerca de 3 a 5 cm da lente principal e ajuste o controle de zoom para <strong>2.0x ou 3.0x</strong> para preencher o enquadramento perfeitamente com alta nitidez.</p>
             </div>
             <div class="mt-4 flex justify-end">
                 <button onclick="app.closeModal('help-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition">Entendido</button>
@@ -332,13 +333,13 @@
                 this.isFrozen = false;
                 this.animationFrameId = null;
                 this.roi = { y: 50, x1: 15, x2: 85 };
-                this.selectedDeviceId = null;
+                this.zoomLevel = 1.0;
+                this.trackCapabilities = null;
 
                 this.lastTime = performance.now();
                 this.frameCount = 0;
 
                 this.initElements();
-                this.loadAvailableCameras();
             }
 
             initElements() {
@@ -346,72 +347,6 @@
                 this.canvas = document.getElementById('inspection-canvas');
                 this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
                 this.placeholder = document.getElementById('camera-placeholder');
-            }
-
-            async loadAvailableCameras() {
-                const selector = document.getElementById('camera-selector');
-                selector.innerHTML = '<option value="">A desbloquear e detetar lentes do Redmi...</option>';
-
-                try {
-                    // Passo obrigatório no Android/Xiaomi: solicitar stream inicial para revelar labels e sub-lentes
-                    const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    tempStream.getTracks().forEach(t => t.stop());
-
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const videoDevices = devices.filter(d => d.kind === 'videoinput');
-
-                    selector.innerHTML = '';
-                    if (videoDevices.length === 0) {
-                        selector.innerHTML = '<option value="">Nenhuma câmara detetada</option>';
-                        return;
-                    }
-
-                    videoDevices.forEach((device, index) => {
-                        const option = document.createElement('option');
-                        option.value = device.deviceId;
-                        
-                        let label = device.label ? device.label.trim() : '';
-                        const lower = label.toLowerCase();
-
-                        if (!label) {
-                            // Se a Xiaomi omitiu o rótulo, enumera com base na ordem física típica do hardware
-                            if (index === 0) label = "Câmara Principal Traseira (Main)";
-                            else if (index === 1) label = "Lente Auxiliar / Macro / Ultra-Wide";
-                            else if (index === 2) label = "Lente Profundidade / Telefoto";
-                            else label = `Câmara Traseira / Frontal ${index + 1}`;
-                        }
-
-                        if (lower.includes('macro') || lower.includes('close') || lower.includes('aux')) {
-                            option.text = `🔍 [MACRO] ${label}`;
-                            if (!this.selectedDeviceId) this.selectedDeviceId = device.deviceId;
-                        } else if (lower.includes('ultra') || lower.includes('wide')) {
-                            option.text = `📐 [ULTRA-WIDE] ${label}`;
-                        } else if (lower.includes('front') || lower.includes('user')) {
-                            option.text = `🤳 [FRONTAL] ${label}`;
-                        } else {
-                            option.text = `📷 [OPÇÃO ${index + 1}] ${label}`;
-                        }
-
-                        selector.appendChild(option);
-                    });
-
-                    if (!this.selectedDeviceId && videoDevices.length > 0) {
-                        this.selectedDeviceId = videoDevices[0].deviceId;
-                    }
-                    selector.value = this.selectedDeviceId;
-
-                } catch (err) {
-                    console.warn("Erro ao enumerar dispositivos:", err);
-                    selector.innerHTML = '<option value="">Erro ao carregar - Tente reiniciar o navegador</option>';
-                }
-            }
-
-            changeCameraSource(deviceId) {
-                this.selectedDeviceId = deviceId;
-                if (this.isCameraActive) {
-                    this.stopCamera();
-                    this.startCamera();
-                }
             }
 
             setFiberCount(count) {
@@ -446,39 +381,59 @@
                 try {
                     const constraints = {
                         video: {
-                            deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
+                            facingMode: { exact: "environment" },
                             width: { ideal: 1920 },
                             height: { ideal: 1080 }
                         }
                     };
 
                     this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    this.video.srcObject = this.stream;
-                    await this.video.play();
-                    
-                    this.isCameraActive = true;
-                    this.placeholder.classList.add('hidden');
-                    
-                    document.getElementById('cam-btn-text').innerText = "Parar Câmara";
-                    document.getElementById('btn-toggle-camera').className = "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-rose-500/40";
-                    document.getElementById('btn-freeze').removeAttribute('disabled');
-
-                    this.startInspectionLoop();
                 } catch (err) {
-                    console.warn("Falha ao abrir com ID exato, a tentar ambiente padrão...", err);
                     try {
-                        this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                        this.video.srcObject = this.stream;
-                        await this.video.play();
-                        this.isCameraActive = true;
-                        this.placeholder.classList.add('hidden');
-                        document.getElementById('cam-btn-text').innerText = "Parar Câmara";
-                        document.getElementById('btn-freeze').removeAttribute('disabled');
-                        this.startInspectionLoop();
+                        // Fallback genérico caso o exact falhe
+                        this.stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: "environment" }
+                        });
                     } catch (err2) {
-                        alert("Não foi possível aceder à câmara selecionada. Verifique as permissões.");
+                        alert("Não foi possível acessar a câmera traseira. Verifique as permissões do navegador.");
+                        return;
                     }
                 }
+
+                this.video.srcObject = this.stream;
+                await this.video.play();
+                
+                this.isCameraActive = true;
+                this.placeholder.classList.add('hidden');
+                
+                document.getElementById('cam-btn-text').innerText = "Parar Câmara";
+                document.getElementById('btn-toggle-camera').className = "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-rose-500/40";
+                document.getElementById('btn-freeze').removeAttribute('disabled');
+                
+                // Configurar suporte a zoom nativo do hardware se disponível
+                const track = this.stream.getVideoTracks()[0];
+                this.trackCapabilities = track.getCapabilities ? track.getCapabilities() : {};
+                
+                const zoomSlider = document.getElementById('slider-zoom');
+                if (this.trackCapabilities.zoom) {
+                    zoomSlider.min = this.trackCapabilities.zoom.min || 1;
+                    zoomSlider.max = this.trackCapabilities.zoom.max || 5;
+                    zoomSlider.step = this.trackCapabilities.zoom.step || 0.1;
+                    zoomSlider.value = this.trackCapabilities.zoom.min || 1;
+                    zoomSlider.removeAttribute('disabled');
+                    this.zoomLevel = parseFloat(zoomSlider.value);
+                } else {
+                    // Zoom digital via canvas se o hardware não expuser API de zoom nativa
+                    zoomSlider.min = 1;
+                    zoomSlider.max = 3;
+                    zoomSlider.step = 0.1;
+                    zoomSlider.value = 1;
+                    zoomSlider.removeAttribute('disabled');
+                    this.zoomLevel = 1.0;
+                }
+                document.getElementById('val-zoom').innerText = `${this.zoomLevel.toFixed(1)}x`;
+
+                this.startInspectionLoop();
             }
 
             stopCamera() {
@@ -497,6 +452,21 @@
                 document.getElementById('btn-toggle-camera').className = "bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700";
                 document.getElementById('freeze-btn-text').innerText = "Congelar";
                 document.getElementById('btn-freeze').setAttribute('disabled', 'true');
+                document.getElementById('slider-zoom').setAttribute('disabled', 'true');
+            }
+
+            async updateZoom(val) {
+                this.zoomLevel = parseFloat(val);
+                document.getElementById('val-zoom').innerText = `${this.zoomLevel.toFixed(1)}x`;
+
+                if (this.stream && this.trackCapabilities && this.trackCapabilities.zoom) {
+                    try {
+                        const track = this.stream.getVideoTracks()[0];
+                        await track.applyConstraints({ advanced: [{ zoom: this.zoomLevel }] });
+                    } catch (e) {
+                        console.warn("Ajuste de zoom nativo não suportado, usando recorte digital.", e);
+                    }
+                }
             }
 
             updateROI() {
@@ -539,7 +509,18 @@
                     this.canvas.height = vh;
                 }
 
-                this.ctx.drawImage(this.video, 0, 0, vw, vh);
+                this.ctx.clearRect(0, 0, vw, vh);
+
+                // Se o zoom nativo não for suportado pela pista, aplicamos zoom digital simulado no canvas
+                if (!this.trackCapabilities.zoom && this.zoomLevel > 1.0) {
+                    const zW = vw / this.zoomLevel;
+                    const zH = vh / this.zoomLevel;
+                    const zX = (vw - zW) / 2;
+                    const zY = (vh - zH) / 2;
+                    this.ctx.drawImage(this.video, zX, zY, zW, zH, 0, 0, vw, vh);
+                } else {
+                    this.ctx.drawImage(this.video, 0, 0, vw, vh);
+                }
 
                 const extracted = this.sampleFibers();
                 const reference = this.getCurrentNormColors();
