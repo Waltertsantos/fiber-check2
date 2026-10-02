@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FiberInspect Macro Mobile - Native Browser Edition</title>
+    <title>FiberInspect Macro Mobile - Multi-Lens Edition</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -28,9 +28,9 @@
             <div>
                 <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
                     FiberInspect Macro
-                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">Macro Real v2</span>
+                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">Multi-Lente v3</span>
                 </h1>
-                <p class="text-[10px] text-slate-400">Fitas 250µm (&lt;4mm) direto no Celular</p>
+                <p class="text-[10px] text-slate-400">Fitas 250µm (&lt;4mm) no Redmi Note</p>
             </div>
         </div>
         <button onclick="app.openModal('help-modal')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 w-8 h-8 rounded-xl flex items-center justify-center border border-slate-700 text-xs">
@@ -61,24 +61,25 @@
                         <i class="fa-solid fa-camera-retro"></i>
                     </div>
                     <p class="text-xs font-semibold text-slate-300">Câmera Desativada</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5 mb-3">Selecione a lente macro e inicie a inspeção.</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 mb-3">Selecione a lente e inicie a inspeção.</p>
                     <button onclick="app.toggleCamera()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-cyan-950/30 flex items-center gap-2">
                         <i class="fa-solid fa-power-off"></i> Iniciar Câmera
                     </button>
                 </div>
             </div>
 
-            <!-- Seletor Avançado de Câmeras / Lentes -->
+            <!-- Seletor Exaustivo de Lentes (Redmi Note Fix) -->
             <div class="mt-3 space-y-1">
                 <div class="flex justify-between items-center">
-                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Seleção de Lente / Câmera</label>
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Seleção de Lentes Traseiras / Frontais</label>
                     <button onclick="app.loadAvailableCameras()" class="text-[10px] text-cyan-400 hover:underline flex items-center gap-1">
-                        <i class="fa-solid fa-rotate">}</i> Atualizar Lentes
+                        <i class="fa-solid fa-rotate"></i> Recarregar Lentes
                     </button>
                 </div>
                 <select id="camera-selector" onchange="app.changeCameraSource(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-medium">
-                    <option value="">A carregar lentes disponíveis...</option>
+                    <option value="">A detetar lentes do dispositivo...</option>
                 </select>
+                <p class="text-[9px] text-slate-500 mt-1">Dica: Se a etiqueta vier vazia, teste a <strong>Opção 1, 2 ou 3</strong> para encontrar a lente macro física do seu Redmi.</p>
             </div>
 
             <!-- Botões Rápidos de Ação da Câmera -->
@@ -172,12 +173,12 @@
                 <i class="fa-solid fa-xmark text-base"></i>
             </button>
             <h3 class="text-sm font-bold text-white mb-2.5 flex items-center gap-1.5">
-                <i class="fa-solid fa-mobile-screen text-cyan-400"></i> Como Ativar a Lente Macro Real
+                <i class="fa-solid fa-mobile-screen text-cyan-400"></i> Como Ativar a Lente Macro no Redmi Note
             </h3>
             <div class="space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                <p><strong>1. Permissão de Câmera:</strong> Garanta que permitiu o acesso à câmara no navegador.</p>
-                <p><strong>2. Escolha da Lente:</strong> No seletor de lentes, procure opções identificadas como <strong>"Macro"</strong> ou lentes traseiras auxiliares. Alguns modelos de telemóvel combinam a macro com a grande-angular (ultra-wide).</p>
-                <p><strong>3. Distância:</strong> Posicione a fita a cerca de 2 a 4 cm para focar corretamente na lente macro.</p>
+                <p><strong>1. Permissão Inicial:</strong> O Android esconde os nomes das lentes auxiliares até que a permissão de vídeo seja concedida uma vez.</p>
+                <p><strong>2. Teste Sequencial:</strong> No campo de seleção de lentes, o aplicativo enumera todas as opções detetadas. Como a Xiaomi costuma ocultar o rótulo ("", "camera2 0", "camera2 1"), experimente alternar entre a <strong>Opção 1, Opção 2 e Opção 3</strong> e ligar a câmara para identificar qual delas ativa o foco macro de proximidade.</p>
+                <p><strong>3. Distância da Fita:</strong> Aproxime a fita óptica a 2-3 cm da lente traseira selecionada.</p>
             </div>
             <div class="mt-4 flex justify-end">
                 <button onclick="app.closeModal('help-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition">Entendido</button>
@@ -349,12 +350,12 @@
 
             async loadAvailableCameras() {
                 const selector = document.getElementById('camera-selector');
-                selector.innerHTML = '<option value="">A detetar lentes do dispositivo...</option>';
+                selector.innerHTML = '<option value="">A desbloquear e detetar lentes do Redmi...</option>';
 
                 try {
-                    // Força a permissão para carregar os nomes exatos das lentes (rótulos)
-                    const initialStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    initialStream.getTracks().forEach(t => t.stop());
+                    // Passo obrigatório no Android/Xiaomi: solicitar stream inicial para revelar labels e sub-lentes
+                    const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    tempStream.getTracks().forEach(t => t.stop());
 
                     const devices = await navigator.mediaDevices.enumerateDevices();
                     const videoDevices = devices.filter(d => d.kind === 'videoinput');
@@ -365,44 +366,43 @@
                         return;
                     }
 
-                    let macroFoundId = null;
-
                     videoDevices.forEach((device, index) => {
                         const option = document.createElement('option');
                         option.value = device.deviceId;
                         
-                        let label = device.label || `Câmara Traseira ${index + 1}`;
+                        let label = device.label ? device.label.trim() : '';
                         const lower = label.toLowerCase();
 
-                        // Identificação inteligente das lentes no telemóvel
-                        if (lower.includes('macro') || lower.includes('close')) {
-                            option.text = `🔍 Lente Macro (${label})`;
-                            macroFoundId = device.deviceId;
-                        } else if (lower.includes('ultra') || lower.includes('wide') || lower.includes('ultrawide')) {
-                            option.text = `📐 Grande-Angular / Macro (${label})`;
-                            if (!macroFoundId) macroFoundId = device.deviceId; // Frequentemente a macro partilha o sensor wide
-                        } else if (lower.includes('back') || lower.includes('traseira') || lower.includes('environment')) {
-                            option.text = `📷 Câmara Principal (${label})`;
-                        } else if (lower.includes('front') || lower.includes('frontal') || lower.includes('user')) {
-                            option.text = `🤳 Câmara Frontal (${label})`;
+                        if (!label) {
+                            // Se a Xiaomi omitiu o rótulo, enumera com base na ordem física típica do hardware
+                            if (index === 0) label = "Câmara Principal Traseira (Main)";
+                            else if (index === 1) label = "Lente Auxiliar / Macro / Ultra-Wide";
+                            else if (index === 2) label = "Lente Profundidade / Telefoto";
+                            else label = `Câmara Traseira / Frontal ${index + 1}`;
+                        }
+
+                        if (lower.includes('macro') || lower.includes('close') || lower.includes('aux')) {
+                            option.text = `🔍 [MACRO] ${label}`;
+                            if (!this.selectedDeviceId) this.selectedDeviceId = device.deviceId;
+                        } else if (lower.includes('ultra') || lower.includes('wide')) {
+                            option.text = `📐 [ULTRA-WIDE] ${label}`;
+                        } else if (lower.includes('front') || lower.includes('user')) {
+                            option.text = `🤳 [FRONTAL] ${label}`;
                         } else {
-                            option.text = `📷 ${label}`;
+                            option.text = `📷 [OPÇÃO ${index + 1}] ${label}`;
                         }
 
                         selector.appendChild(option);
                     });
 
-                    // Se encontrou uma lente macro ou traseira específica, define como padrão
-                    if (macroFoundId) {
-                        this.selectedDeviceId = macroFoundId;
-                        selector.value = macroFoundId;
-                    } else if (videoDevices.length > 0) {
+                    if (!this.selectedDeviceId && videoDevices.length > 0) {
                         this.selectedDeviceId = videoDevices[0].deviceId;
                     }
+                    selector.value = this.selectedDeviceId;
 
                 } catch (err) {
-                    console.warn("Erro ao enumerar lentes:", err);
-                    selector.innerHTML = '<option value="">Usar câmara traseira padrão do sistema</option>';
+                    console.warn("Erro ao enumerar dispositivos:", err);
+                    selector.innerHTML = '<option value="">Erro ao carregar - Tente reiniciar o navegador</option>';
                 }
             }
 
@@ -446,7 +446,7 @@
                 try {
                     const constraints = {
                         video: {
-                            deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : { ideal: "environment" },
+                            deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined,
                             width: { ideal: 1920 },
                             height: { ideal: 1080 }
                         }
@@ -465,7 +465,7 @@
 
                     this.startInspectionLoop();
                 } catch (err) {
-                    console.warn("Falha com deviceId exato, a tentar fallback genérico...", err);
+                    console.warn("Falha ao abrir com ID exato, a tentar ambiente padrão...", err);
                     try {
                         this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                         this.video.srcObject = this.stream;
@@ -476,7 +476,7 @@
                         document.getElementById('btn-freeze').removeAttribute('disabled');
                         this.startInspectionLoop();
                     } catch (err2) {
-                        alert("Não foi possível aceder à câmara selecionada. Verifique as permissões do navegador.");
+                        alert("Não foi possível aceder à câmara selecionada. Verifique as permissões.");
                     }
                 }
             }
