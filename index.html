@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FiberInspect Macro Mobile - Native Browser Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+    <!-- Header Mobile Optimized -->
+    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+            <div class="bg-cyan-500/10 border border-cyan-500/30 p-2 rounded-xl text-cyan-400">
+                <i class="fa-solid fa-camera text-base"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+                    FiberInspect Macro
+                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">Macro Real v2</span>
+                </h1>
+                <p class="text-[10px] text-slate-400">Fitas 250µm (&lt;4mm) direto no Celular</p>
+            </div>
+        </div>
+        <button onclick="app.openModal('help-modal')" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 w-8 h-8 rounded-xl flex items-center justify-center border border-slate-700 text-xs">
+            <i class="fa-solid fa-circle-question text-cyan-400"></i>
+        </button>
+    </header>
+
+    <!-- Main Content Layout (Mobile Stacked) -->
+    <main class="flex-1 w-full max-w-lg mx-auto p-3 flex flex-col space-y-4 pb-20">
+        
+        <!-- 1. Câmera Viewport & Retículo -->
+        <div class="bg-slate-900/90 rounded-2xl p-3 border border-slate-800 shadow-xl flex flex-col">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-eye text-cyan-400"></i> Visão Macro da Fita Óptica
+                </span>
+                <span id="fps-counter" class="text-[9px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">60 FPS</span>
+            </div>
+
+            <!-- Video / Canvas Container -->
+            <div id="viewport-container" class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                <video id="webcam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover hidden"></video>
+                <canvas id="inspection-canvas" class="absolute inset-0 w-full h-full object-contain"></canvas>
+                
+                <!-- Placeholder State -->
+                <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-slate-400 p-4 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 text-xl mb-2 shadow-inner">
+                        <i class="fa-solid fa-camera-retro"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-300">Câmera Desativada</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 mb-3">Selecione a lente macro e inicie a inspeção.</p>
+                    <button onclick="app.toggleCamera()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-lg shadow-cyan-950/30 flex items-center gap-2">
+                        <i class="fa-solid fa-power-off"></i> Iniciar Câmera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seletor Avançado de Câmeras / Lentes -->
+            <div class="mt-3 space-y-1">
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Seleção de Lente / Câmera</label>
+                    <button onclick="app.loadAvailableCameras()" class="text-[10px] text-cyan-400 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-rotate">}</i> Atualizar Lentes
+                    </button>
+                </div>
+                <select id="camera-selector" onchange="app.changeCameraSource(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-medium">
+                    <option value="">A carregar lentes disponíveis...</option>
+                </select>
+            </div>
+
+            <!-- Botões Rápidos de Ação da Câmera -->
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <button id="btn-toggle-camera" onclick="app.toggleCamera()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700">
+                    <i class="fa-solid fa-power-off text-cyan-400"></i> <span id="cam-btn-text">Ligar Câmera</span>
+                </button>
+                <button onclick="app.toggleFreeze()" id="btn-freeze" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700" disabled>
+                    <i class="fa-solid fa-snowflake text-cyan-400"></i> <span id="freeze-btn-text">Congelar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Parâmetros de Fibras & Normas -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
+            <h2 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-cyan-400"></i> Configuração de Fibras &amp; Norma
+            </h2>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <button id="btn-mode-12" onclick="app.setFiberCount(12)" class="py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-cyan-500/20 border-cyan-500 text-cyan-300">
+                    <span class="font-bold">12 Fibras</span>
+                    <span class="text-[9px] text-cyan-400 font-normal">Padrão Fita</span>
+                </button>
+                <button id="btn-mode-16" onclick="app.setFiberCount(16)" class="py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-slate-800/50 border-slate-700 text-slate-300">
+                    <span class="font-bold">16 Fibras</span>
+                    <span class="text-[9px] text-slate-400 font-normal">Alta Densidade</span>
+                </button>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Norma / Método</label>
+                <select id="norm-selector" onchange="app.setNormStandard(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-medium">
+                    <option value="ABNT">ABNT (Padrão Nacional)</option>
+                    <option value="TIA_A" selected>TIA/EIA-598 - Método A</option>
+                    <option value="TIA_B">TIA/EIA-598 - Método B</option>
+                    <option value="TIA_C">TIA/EIA-598 - Método C</option>
+                </select>
+            </div>
+
+            <!-- Ajuste Fino ROI (<4mm) -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2.5">
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="font-semibold text-slate-300">Ajuste Retículo Fita (&lt;4mm)</span>
+                    <span id="val-roi-y" class="font-mono text-cyan-400">50%</span>
+                </div>
+                <input type="range" id="slider-roi-y" min="20" max="80" value="50" oninput="app.updateROI()" class="w-full accent-cyan-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer">
+            </div>
+        </div>
+
+        <!-- 3. Veredito & Matriz de Cores -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
+            <h2 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-clipboard-check text-cyan-400"></i> Veredito Automático CIELAB
+            </h2>
+
+            <!-- Status Banner -->
+            <div id="verdict-banner" class="p-3 rounded-xl border flex items-center justify-between bg-slate-950/60 border-slate-800 transition-all duration-200">
+                <div class="flex items-center space-x-2.5">
+                    <div id="verdict-icon" class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-slate-400 border border-slate-800 text-sm">
+                        <i class="fa-solid fa-hourglass"></i>
+                    </div>
+                    <div>
+                        <h3 id="verdict-title" class="text-xs font-bold text-slate-300">Aguardando Câmera</h3>
+                        <p id="verdict-subtitle" class="text-[10px] text-slate-400">Ative a câmera para iniciar.</p>
+                    </div>
+                </div>
+                <div id="verdict-score" class="text-right">
+                    <span class="text-xl font-extrabold text-slate-500 font-mono">--%</span>
+                </div>
+            </div>
+
+            <!-- Matrix Grid de Fibras Detectadas -->
+            <div class="space-y-1.5">
+                <div class="flex justify-between items-center text-[11px] text-slate-400">
+                    <span>Fibras na Fita:</span>
+                    <span id="detected-count" class="font-mono text-cyan-400">0 / 12</span>
+                </div>
+                <div id="extracted-fibers-container" class="grid grid-cols-6 gap-1.5 p-2 bg-slate-950/80 rounded-xl border border-slate-800 min-h-[70px] items-center justify-center">
+                    <div class="col-span-full text-center text-[11px] text-slate-500">Inicie a câmera para alinhar.</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl relative">
+            <button onclick="app.closeModal('help-modal')" class="absolute top-3 right-3 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+            <h3 class="text-sm font-bold text-white mb-2.5 flex items-center gap-1.5">
+                <i class="fa-solid fa-mobile-screen text-cyan-400"></i> Como Ativar a Lente Macro Real
+            </h3>
+            <div class="space-y-2 text-[11px] text-slate-300 leading-relaxed">
+                <p><strong>1. Permissão de Câmera:</strong> Garanta que permitiu o acesso à câmara no navegador.</p>
+                <p><strong>2. Escolha da Lente:</strong> No seletor de lentes, procure opções identificadas como <strong>"Macro"</strong> ou lentes traseiras auxiliares. Alguns modelos de telemóvel combinam a macro com a grande-angular (ultra-wide).</p>
+                <p><strong>3. Distância:</strong> Posicione a fita a cerca de 2 a 4 cm para focar corretamente na lente macro.</p>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button onclick="app.closeModal('help-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLOR_PRESETS = {
+            'ABNT': {
+                12: [
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] }
+                ],
+                16: [
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] },
+                    { name: "Verde Esc.", hex: "#14532d", rgb: [20, 83, 45] },
+                    { name: "Amarelo Cla.", hex: "#fef08a", rgb: [254, 240, 138] },
+                    { name: "Branco Cla.", hex: "#ffffff", rgb: [255, 255, 255] },
+                    { name: "Azul Cla.", hex: "#93c5fd", rgb: [147, 197, 253] }
+                ]
+            },
+            'TIA_A': {
+                12: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] }
+                ],
+                16: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] },
+                    { name: "Azul Cla.", hex: "#93c5fd", rgb: [147, 197, 253] },
+                    { name: "Laranja Cla.", hex: "#fdba74", rgb: [253, 186, 116] },
+                    { name: "Verde Cla.", hex: "#86efac", rgb: [134, 239, 172] },
+                    { name: "Marrom Cla.", hex: "#d97706", rgb: [217, 119, 6] }
+                ]
+            },
+            'TIA_B': {
+                12: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] }
+                ],
+                16: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] },
+                    { name: "Cinza Cla.", hex: "#cbd5e1", rgb: [203, 213, 225] },
+                    { name: "Branco Cla.", hex: "#ffffff", rgb: [255, 255, 255] },
+                    { name: "Vermelho Cla.", hex: "#fca5a5", rgb: [252, 165, 165] },
+                    { name: "Preto Cla.", hex: "#334155", rgb: [51, 65, 85] }
+                ]
+            },
+            'TIA_C': {
+                12: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [124, 58, 237] },
+                    { name: "Rosa", hex: "#db2777", rgb: [219, 39, 119] },
+                    { name: "Turquesa", hex: "#06b6d4", rgb: [6, 182, 212] }
+                ],
+                16: [
+                    { name: "Azul", hex: "#2563eb", rgb: [37, 99, 235] },
+                    { name: "Verde", hex: "#16a34a", rgb: [22, 163, 74] },
+                    { name: "Laranja", hex: "#f97316", rgb: [249, 115, 22] },
+                    { name: "Marrom", hex: "#92400e", rgb: [146, 64, 14] },
+                    { name: "Cinza", hex: "#64748b", rgb: [100, 116, 139] },
+                    { name: "Branco", hex: "#f8fafc", rgb: [248, 250, 252] },
+                    { name: "Vermelho", hex: "#dc2626", rgb: [220, 38, 38] },
+                    { name: "Preto", hex: "#0f172a", rgb: [15, 23, 42] },
+                    { name: "Amarelo", hex: "#eab308", rgb: [234, 179, 8] },
+                    { name: "Violeta", hex: "#7c3aed", rgb: [196, 181, 253] },
+                    { name: "Rosa Cla.", hex: "#fbcfe8", rgb: [251, 207, 232] },
+                    { name: "Turquesa Cla.", hex: "#a5f3fc", rgb: [165, 243, 252] }
+                ]
+            }
+        };
+
+        class MacroMobileBrowserApp {
+            constructor() {
+                this.fiberCount = 12;
+                this.currentNorm = 'TIA_A';
+                this.tolerance = 30;
+                this.stream = null;
+                this.isCameraActive = false;
+                this.isFrozen = false;
+                this.animationFrameId = null;
+                this.roi = { y: 50, x1: 15, x2: 85 };
+                this.selectedDeviceId = null;
+
+                this.lastTime = performance.now();
+                this.frameCount = 0;
+
+                this.initElements();
+                this.loadAvailableCameras();
+            }
+
+            initElements() {
+                this.video = document.getElementById('webcam-video');
+                this.canvas = document.getElementById('inspection-canvas');
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                this.placeholder = document.getElementById('camera-placeholder');
+            }
+
+            async loadAvailableCameras() {
+                const selector = document.getElementById('camera-selector');
+                selector.innerHTML = '<option value="">A detetar lentes do dispositivo...</option>';
+
+                try {
+                    // Força a permissão para carregar os nomes exatos das lentes (rótulos)
+                    const initialStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    initialStream.getTracks().forEach(t => t.stop());
+
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+                    selector.innerHTML = '';
+                    if (videoDevices.length === 0) {
+                        selector.innerHTML = '<option value="">Nenhuma câmara detetada</option>';
+                        return;
+                    }
+
+                    let macroFoundId = null;
+
+                    videoDevices.forEach((device, index) => {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        
+                        let label = device.label || `Câmara Traseira ${index + 1}`;
+                        const lower = label.toLowerCase();
+
+                        // Identificação inteligente das lentes no telemóvel
+                        if (lower.includes('macro') || lower.includes('close')) {
+                            option.text = `🔍 Lente Macro (${label})`;
+                            macroFoundId = device.deviceId;
+                        } else if (lower.includes('ultra') || lower.includes('wide') || lower.includes('ultrawide')) {
+                            option.text = `📐 Grande-Angular / Macro (${label})`;
+                            if (!macroFoundId) macroFoundId = device.deviceId; // Frequentemente a macro partilha o sensor wide
+                        } else if (lower.includes('back') || lower.includes('traseira') || lower.includes('environment')) {
+                            option.text = `📷 Câmara Principal (${label})`;
+                        } else if (lower.includes('front') || lower.includes('frontal') || lower.includes('user')) {
+                            option.text = `🤳 Câmara Frontal (${label})`;
+                        } else {
+                            option.text = `📷 ${label}`;
+                        }
+
+                        selector.appendChild(option);
+                    });
+
+                    // Se encontrou uma lente macro ou traseira específica, define como padrão
+                    if (macroFoundId) {
+                        this.selectedDeviceId = macroFoundId;
+                        selector.value = macroFoundId;
+                    } else if (videoDevices.length > 0) {
+                        this.selectedDeviceId = videoDevices[0].deviceId;
+                    }
+
+                } catch (err) {
+                    console.warn("Erro ao enumerar lentes:", err);
+                    selector.innerHTML = '<option value="">Usar câmara traseira padrão do sistema</option>';
+                }
+            }
+
+            changeCameraSource(deviceId) {
+                this.selectedDeviceId = deviceId;
+                if (this.isCameraActive) {
+                    this.stopCamera();
+                    this.startCamera();
+                }
+            }
+
+            setFiberCount(count) {
+                this.fiberCount = count;
+                document.getElementById('btn-mode-12').className = count === 12 
+                    ? "py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-cyan-500/20 border-cyan-500 text-cyan-300"
+                    : "py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-slate-800/50 border-slate-700 text-slate-300";
+
+                document.getElementById('btn-mode-16').className = count === 16 
+                    ? "py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-cyan-500/20 border-cyan-500 text-cyan-300"
+                    : "py-2.5 px-3 rounded-xl border text-xs font-semibold transition flex flex-col items-center justify-center gap-0.5 bg-slate-800/50 border-slate-700 text-slate-300";
+            }
+
+            setNormStandard(normKey) {
+                this.currentNorm = normKey;
+            }
+
+            getCurrentNormColors() {
+                const standardObj = COLOR_PRESETS[this.currentNorm] || COLOR_PRESETS['TIA_A'];
+                return standardObj[this.fiberCount] || standardObj[12];
+            }
+
+            async toggleCamera() {
+                if (this.isCameraActive) {
+                    this.stopCamera();
+                } else {
+                    await this.startCamera();
+                }
+            }
+
+            async startCamera() {
+                try {
+                    const constraints = {
+                        video: {
+                            deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : { ideal: "environment" },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = this.stream;
+                    await this.video.play();
+                    
+                    this.isCameraActive = true;
+                    this.placeholder.classList.add('hidden');
+                    
+                    document.getElementById('cam-btn-text').innerText = "Parar Câmara";
+                    document.getElementById('btn-toggle-camera').className = "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-rose-500/40";
+                    document.getElementById('btn-freeze').removeAttribute('disabled');
+
+                    this.startInspectionLoop();
+                } catch (err) {
+                    console.warn("Falha com deviceId exato, a tentar fallback genérico...", err);
+                    try {
+                        this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                        this.video.srcObject = this.stream;
+                        await this.video.play();
+                        this.isCameraActive = true;
+                        this.placeholder.classList.add('hidden');
+                        document.getElementById('cam-btn-text').innerText = "Parar Câmara";
+                        document.getElementById('btn-freeze').removeAttribute('disabled');
+                        this.startInspectionLoop();
+                    } catch (err2) {
+                        alert("Não foi possível aceder à câmara selecionada. Verifique as permissões do navegador.");
+                    }
+                }
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+                this.isCameraActive = false;
+                this.isFrozen = false;
+                this.video.srcObject = null;
+                this.placeholder.classList.remove('hidden');
+
+                document.getElementById('cam-btn-text').innerText = "Ligar Câmara";
+                document.getElementById('btn-toggle-camera').className = "bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700";
+                document.getElementById('freeze-btn-text').innerText = "Congelar";
+                document.getElementById('btn-freeze').setAttribute('disabled', 'true');
+            }
+
+            updateROI() {
+                this.roi.y = parseInt(document.getElementById('slider-roi-y').value);
+                document.getElementById('val-roi-y').innerText = `${this.roi.y}%`;
+            }
+
+            toggleFreeze() {
+                this.isFrozen = !this.isFrozen;
+                document.getElementById('freeze-btn-text').innerText = this.isFrozen ? "Retomar" : "Congelar";
+            }
+
+            startInspectionLoop() {
+                const loop = (timestamp) => {
+                    if (!this.isCameraActive) return;
+
+                    this.frameCount++;
+                    if (timestamp - this.lastTime >= 1000) {
+                        const fps = Math.round((this.frameCount * 1000) / (timestamp - this.lastTime));
+                        document.getElementById('fps-counter').innerText = `${fps} FPS`;
+                        this.frameCount = 0;
+                        this.lastTime = timestamp;
+                    }
+
+                    if (!this.isFrozen) {
+                        this.processFrame();
+                    }
+                    this.animationFrameId = requestAnimationFrame(loop);
+                };
+                this.animationFrameId = requestAnimationFrame(loop);
+            }
+
+            processFrame() {
+                if (this.video.readyState !== this.video.HAVE_ENOUGH_DATA) return;
+
+                const vw = this.video.videoWidth;
+                const vh = this.video.videoHeight;
+                if (this.canvas.width !== vw || this.canvas.height !== vh) {
+                    this.canvas.width = vw;
+                    this.canvas.height = vh;
+                }
+
+                this.ctx.drawImage(this.video, 0, 0, vw, vh);
+
+                const extracted = this.sampleFibers();
+                const reference = this.getCurrentNormColors();
+
+                let matchCount = 0;
+                let results = [];
+
+                for (let i = 0; i < this.fiberCount; i++) {
+                    const ext = extracted[i];
+                    const ref = reference[i];
+
+                    const distance = this.calculateCIELABDistance(ext.rgb, ref.rgb);
+                    const isMatch = distance <= this.tolerance;
+
+                    if (isMatch) matchCount++;
+
+                    results.push({
+                        fiberIndex: i + 1,
+                        extracted: ext,
+                        expected: ref,
+                        isMatch: isMatch
+                    });
+
+                    this.drawFiberBoundingBox(ext, isMatch, i + 1);
+                }
+
+                this.drawRoiGuideLines(vw, vh);
+
+                const score = Math.round((matchCount / this.fiberCount) * 100);
+                const approved = score >= 90;
+
+                this.updateUIResults(approved, score, results);
+            }
+
+            sampleFibers() {
+                const vw = this.canvas.width;
+                const vh = this.canvas.height;
+
+                const startX = vw * (this.roi.x1 / 100);
+                const endX = vw * (this.roi.x2 / 100);
+                const centerY = vh * (this.roi.y / 100);
+
+                const step = (endX - startX) / this.fiberCount;
+                const samples = [];
+
+                for (let i = 0; i < this.fiberCount; i++) {
+                    const sampleX = Math.floor(startX + (step * i) + (step / 2));
+                    const sampleY = Math.floor(centerY);
+
+                    const boxSize = 7;
+                    const half = Math.floor(boxSize / 2);
+                    const p = this.ctx.getImageData(sampleX - half, sampleY - half, boxSize, boxSize).data;
+                    
+                    let rSum = 0, gSum = 0, bSum = 0, count = 0;
+                    for (let j = 0; j < p.length; j += 4) {
+                        rSum += p[j];
+                        gSum += p[j+1];
+                        bSum += p[j+2];
+                        count++;
+                    }
+
+                    const rgb = [Math.round(rSum/count), Math.round(gSum/count), Math.round(bSum/count)];
+                    const hex = "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+
+                    samples.push({ index: i + 1, x: sampleX, y: sampleY, rgb: rgb, hex: hex });
+                }
+
+                return samples;
+            }
+
+            drawFiberBoundingBox(ext, isMatch, index) {
+                const boxW = Math.max(12, this.canvas.width * 0.02);
+                const boxH = boxW * 2.5;
+
+                this.ctx.strokeStyle = isMatch ? '#10b981' : '#f43f5e';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(ext.x - boxW/2, ext.y - boxH/2, boxW, boxH);
+            }
+
+            drawRoiGuideLines(vw, vh) {
+                const startX = vw * (this.roi.x1 / 100);
+                const endX = vw * (this.roi.x2 / 100);
+                const centerY = vh * (this.roi.y / 100);
+
+                this.ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([4, 4]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(startX, centerY);
+                this.ctx.lineTo(endX, centerY);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+            }
+
+            calculateCIELABDistance(rgb1, rgb2) {
+                const rDiff = rgb1[0] - rgb2[0];
+                const gDiff = rgb1[1] - rgb2[1];
+                const bDiff = rgb1[2] - rgb2[2];
+                return Math.sqrt(0.299 * rDiff * rDiff + 0.587 * gDiff * gDiff + 0.114 * bDiff * bDiff);
+            }
+
+            updateUIResults(approved, score, results) {
+                const banner = document.getElementById('verdict-banner');
+                const icon = document.getElementById('verdict-icon');
+                const title = document.getElementById('verdict-title');
+                const subtitle = document.getElementById('verdict-subtitle');
+                const scoreElem = document.getElementById('verdict-score').querySelector('span');
+
+                scoreElem.innerText = `${score}%`;
+                scoreElem.className = `text-xl font-extrabold font-mono ${approved ? 'text-emerald-400' : 'text-rose-400'}`;
+
+                if (approved) {
+                    banner.className = "p-3 rounded-xl border flex items-center justify-between bg-emerald-950/30 border-emerald-500/40 transition-all duration-200";
+                    icon.className = "w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30 text-sm";
+                    icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                    title.innerText = "FITA APROVADA";
+                    title.className = "text-xs font-bold text-emerald-300";
+                    subtitle.innerText = "Sequência óptica correta.";
+                } else {
+                    banner.className = "p-3 rounded-xl border flex items-center justify-between bg-rose-950/30 border-rose-500/40 transition-all duration-200";
+                    icon.className = "w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 border border-rose-500/30 text-sm";
+                    icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    title.innerText = "DIVERGÊNCIA NA FITA";
+                    title.className = "text-xs font-bold text-rose-300";
+                    subtitle.innerText = "Inversão ou cor incorreta.";
+                }
+
+                const container = document.getElementById('extracted-fibers-container');
+                container.innerHTML = '';
+                document.getElementById('detected-count').innerText = `${results.length} / ${this.fiberCount}`;
+
+                results.forEach(res => {
+                    const card = document.createElement('div');
+                    card.className = `flex flex-col items-center p-1.5 rounded-lg border ${res.isMatch ? 'bg-slate-900 border-slate-800' : 'bg-rose-950/40 border-rose-500/50'}`;
+                    card.innerHTML = `
+                        <div class="text-[9px] text-slate-400 font-semibold mb-0.5">#${res.fiberIndex}</div>
+                        <div class="w-full aspect-square rounded border border-slate-700 mb-1" style="background-color: ${res.extracted.hex};"></div>
+                        <span class="text-[8px] font-bold ${res.isMatch ? 'text-emerald-400' : 'text-rose-400'}">${res.isMatch ? 'OK' : 'Err'}</span>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+            closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        }
+
+        const app = new MacroMobileBrowserApp();
+    </script>
+</body>
+</html>
